@@ -15,37 +15,38 @@ tasks_db: Dict[int, dict] = {}
 task_counter = 0
 
 
-@app.get("/")
-async def root():
-    """
-    Корневой эндпоинт.
-    Возвращает приветственное сообщение.
-    """
-    return {"message": "Hello, World!"}
 
 
-@app.get("/items/{item_id}")
-async def read_item(item_id: int):
-    """
-    Эндпоинт для получения элемента по ID.
-    - **item_id**: Уникальный идентификатор элемента (целое число)
-    """
-    return {"item_id": item_id+100}
+# @app.get("/")
+# async def root():
+#     """
+#     Корневой эндпоинт.
+#     Возвращает приветственное сообщение.
+#     """
+#     return {"message": "Hello, World!"}
+#
+#
+# @app.get("/items/{item_id}")
+# async def read_item(item_id: int):
+#     """
+#     Эндпоинт для получения элемента по ID.
+#     - **item_id**: Уникальный идентификатор элемента (целое число)
+#     """
+#     return {"item_id": item_id+100}
 
 # @app.get("/products/{product_id}")
 # async def read_item(product_id: int):
 #     return {"product_id": product_id, "product": products[product_id]}
 
 
-@app.get("/users/{username}")
-async def read_user(username: str, active: bool = Query(True, description="Фильтр по активности пользователя")):
-    return {"username":username, "active":active}
+# @app.get("/users/{username}")
+# async def read_user(username: str, active: bool = Query(True, description="Фильтр по активности пользователя")):
+#     return {"username":username, "active":active}
 
 
 @app.get("/tasks")
 async def read_tasks(): # формат вывода: {task_id}:int - task: dict
     """Получить все задачи"""
-    print(tasks_db)
     data = dict()
     for idx, task in tasks_db.items():
         data[idx] = {"title": task["title"], "description": task["description"], "completed": task["completed"]}
@@ -86,10 +87,26 @@ async def create_task(task: TaskCreate):
 
 
 @app.put("/tasks/{task_id}")
-async def update_task():
-    pass
+async def update_task(task: TaskCreate, task_id:int):
+    if task_id in tasks_db:
+        tasks_db[task_id] = {"title": task.title, "description": task.description, "completed": task.completed}
+        return {task_id: {"title": tasks_db[task_id]["title"], "description": tasks_db[task_id]["description"],
+                      "completed": tasks_db[task_id]["completed"]}}
+    return "Not Found"
+
+
+
+
+# @app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+# async def delete_task(task_id:int):
+#     if task_id in tasks_db:
+#         del tasks_db[task_id]
+#     return "No Content"
 
 
 @app.delete("/tasks/{task_id}")
-async def delete_task():
-    pass
+async def delete_task(task_id:int):
+    if task_id in tasks_db:
+        res = tasks_db.pop(task_id)
+        return res
+    return "No Content"
